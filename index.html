@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>登登的日常導航儀 (高自訂次數與多任務版)</title>
+  <!-- Apple PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="登登日常">
+  <meta name="theme-color" content="#2563EB">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%232563EB'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🚀</text></svg>">
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-light: #EFF6FF;
+      --primary-border: #BFDBFE;
+      --success: #10B981;
+      --success-light: #ECFDF5;
+      --warning: #F59E0B;
+      --warning-light: #FFFBEB;
+      --danger: #EF4444;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --rose: #F43F5E;
+      --rose-light: #FFF1F2;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --radius: 16px;
+      --shadow: 0 4px 14px rgba(0,0,0,0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 95px;
+      padding-top: env(safe-area-inset-top, 20px);
+      padding-left: env(safe-area-inset-left, 12px);
+      padding-right: env(safe-area-inset-right, 12px);
+    }
+
+    /* 頂部標題與統計 */
+    header {
+      background: var(--card-bg);
+      padding: 16px 18px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-left h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-star {
+      background: #FFFBEB;
+      border: 1.5px solid #FCD34D;
+      color: #B45309;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-progress {
+      background: var(--primary-light);
+      border: 1.5px solid var(--primary-border);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    /* 底部導航欄 */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 12px));
+      z-index: 999;
+    }
+
+    .nav-btn {
+      text-decoration: none;
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn.active, .nav-btn:hover {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .nav-btn .icon {
+      font-size: 1.35rem;
+    }
+
+    /* 頁面切換控制 */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block !important;
+    }
+
+    /* 分類切換鈕列 */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-pill {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .filter-pill.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* 管理模式功能按鈕 */
+    .action-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .btn-toggle-edit {
+      background: #F1F5F9;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .btn-toggle-edit.active {
+      background: #FEF3C7;
+      border-color: #F59E0B;
+      color: #B45309;
+    }
+
+    .btn-add-task {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* 任務卡片樣式 */
+    .task-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .task-card.completed {
+      background: var(--success-light);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .task-card.edit-mode {
+      border: 2px dashed #CBD5E1;
+    }
+
+    .task-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      background: var(--primary-light);
+      cursor: pointer;
+    }
+
+    .cat-school .task-icon { background: var(--primary-light); }
+    .cat-finemotor .task-icon { background: #FFE4E6; }
+    .cat-heavywork .task-icon { background: #FEF3C7; }
+    .cat-calm .task-icon { background: var(--success-light); }
+
+    .task-content {
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .task-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-bottom: 3px;
+    }
+
+    .tag-school { background: #DBEAFE; color: #1E40AF; }
+    .tag-finemotor { background: #FFE4E6; color: #9F1239; }
+    .tag-heavywork { background: #FEF3C7; color: #92400E; }
+    .tag-calm { background: #D1FAE5; color: #065F46; }
+
+    .task-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .task-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    /* 次數調整控制組 (直觀 [-] 次數 [+] 設計) */
+    .count-adjuster {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #F1F5F9;
+      border-radius: 10px;
+      padding: 3px 6px;
+      margin-top: 6px;
+    }
+
+    .count-btn {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 26px;
+      height: 24px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .count-btn:active {
+      background: #E2E8F0;
+    }
+
+    .count-val {
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: var(--primary);
+      min-width: 44px;
+      text-align: center;
+    }
+
+    .task-check {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #CBD5E1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.1rem;
+      color: white;
+      cursor: pointer;
+    }
+
+    .task-card.completed .task-check {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .order-btns {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      margin-left: 6px;
+    }
+
+    .order-btns button {
+      background: #F1F5F9;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 30px;
+      height: 24px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .task-card.edit-mode .order-btns { display: flex; }
+    .task-card.edit-mode .task-check { display: none; }
+
+    /* 通關解鎖看板 (First-Then) */
+    .gate-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .gate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .gate-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gate-progress-text {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .gate-card {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .gate-card.passed {
+      background: var(--success-light);
+      border-color: var(--success);
+    }
+
+    .gate-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .gate-badge.b-school { background: #DBEAFE; color: #1E40AF; }
+    .gate-badge.b-fine { background: #FFE4E6; color: #9F1239; }
+    .gate-badge.b-heavy { background: #FEF3C7; color: #92400E; }
+    .gate-badge.b-extra { background: #EDE9FE; color: #5B21B6; }
+
+    .gate-info { flex: 1; }
+
+    .gate-name {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .gate-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .gate-check {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #CBD5E1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: white;
+    }
+
+    .gate-card.passed .gate-check {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    /* 然後獎勵卡 */
+    .then-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      border: 2px dashed #CBD5E1;
+      transition: all 0.3s;
+    }
+
+    .then-card.unlocked {
+      background: #FFFBEB;
+      border: 2px solid #F59E0B;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.2);
+    }
+
+    .then-status-badge {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .status-locked { background: #F1F5F9; color: var(--text-muted); }
+    .status-unlocked { background: #F59E0B; color: white; }
+
+    .then-desc {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .then-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .arrow-divider {
+      text-align: center;
+      font-size: 1.6rem;
+      color: var(--primary);
+      font-weight: 900;
+      margin: 4px 0;
+    }
+
+    /* 視覺倒數計時器 */
+    .timer-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .timer-disc-wrap {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 10px auto 18px;
+    }
+
+    svg.timer-svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+
+    circle.timer-bg { fill: #F1F5F9; stroke: none; }
+    circle.timer-progress {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 24;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s linear, stroke 0.5s ease;
+    }
+
+    .timer-center-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .timer-digits {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-state-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .timer-presets {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .preset-btn {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .preset-btn.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .timer-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .btn-main {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-reset {
+      background: #E2E8F0;
+      color: var(--text);
+      border: none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* 歷史數據庫頁面樣式 */
+    .history-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .history-date { font-weight: 800; font-size: 0.98rem; color: var(--text); }
+    .history-stat {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--success);
+      background: var(--success-light);
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+
+    .history-bar {
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .history-bar-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: 4px;
+    }
+
+    .history-task-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .h-pill {
+      font-size: 0.75rem;
+      background: var(--bg);
+      color: var(--text-muted);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .h-pill.done {
+      background: var(--success-light);
+      color: #065F46;
+      border-color: rgba(16, 185, 129, 0.3);
+      font-weight: 600;
+    }
+
+    .history-note-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+    }
+
+    /* 指引方塊 */
+    .guide-box {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .guide-box h3 {
+      font-size: 1.05rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .guide-box p, .guide-box li {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .guide-box ul, .guide-box ol { padding-left: 20px; margin-top: 6px; }
+    .guide-box li { margin-bottom: 5px; }
+
+    /* 彈出視窗 Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      padding: 22px 20px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .form-group { margin-bottom: 12px; text-align: left; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .modal-btns {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .cheer-toast {
+      position: fixed;
+      top: 25%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(30, 41, 59, 0.95);
+      color: #FBBF24;
+      padding: 14px 24px;
+      border-radius: 24px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: none;
+      z-index: 1200;
+      pointer-events: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部狀態列 -->
+  <header>
+    <div class="header-left">
+      <span style="font-size: 1.8rem;">🚀</span>
+      <div>
+        <h1>登登日常導航儀</h1>
+        <p class="header-subtitle" id="currentDateText">四年級通關解鎖版</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <div class="badge-progress" id="progressBadge">0/18 完成</div>
+      <div class="badge-star" id="starBadge">⭐ <span id="starCount">0</span></div>
+    </div>
+  </header>
+
+  <!-- 頁面 1：今日任務清單 (Missions) -->
+  <div id="tab-tasks" class="tab-content active">
+    <!-- 管理模式控制列 -->
+    <div class="action-toolbar">
+      <button class="btn-toggle-edit" id="btnToggleEdit" onclick="toggleEditMode()">⚙️ 家長排列/編輯</button>
+      <button class="btn-add-task" onclick="openAddTaskModal()">➕ 新增自訂任務</button>
+    </div>
+
+    <!-- 分類切換 -->
+    <div class="filter-bar">
+      <button class="filter-pill active" onclick="filterTasks('all', this)">全部任務</button>
+      <button class="filter-pill" onclick="filterTasks('school', this)">📖 課業與常規</button>
+      <button class="filter-pill" onclick="filterTasks('finemotor', this)">🤲 精巧小肌肉</button>
+      <button class="filter-pill" onclick="filterTasks('heavywork', this)">⚡ 體能重工作</button>
+      <button class="filter-pill" onclick="filterTasks('calm', this)">🌬️ 神經調節放鬆</button>
+    </div>
+
+    <!-- 任務清單容器 (由 JS 安全動態產生並支援手動即時微調次數) -->
+    <div id="taskList"></div>
+
+    <!-- 結算與存檔按鈕 -->
+    <div style="display: flex; gap: 10px; margin: 18px 0 10px;">
+      <button class="btn-main" style="flex: 1;" onclick="archiveTodayProgress()">💾 結算並儲存今日紀錄</button>
+      <button class="btn-reset" onclick="resetTodayTasks()">🔄 重置打勾</button>
+    </div>
+  </div>
+
+  <!-- 頁面 2：多合一「先做...然後...」通關解鎖板 (Multi-Gate First-Then Board) -->
+  <div id="tab-firstthen" class="tab-content">
+    <div class="gate-container">
+      <div class="gate-header">
+        <div class="gate-title">
+          <span>🛡️</span>
+          <span>爸爸指定的通關任務 (FIRST)</span>
+        </div>
+        <div class="gate-progress-text" id="gateProgressText">0/3 通關完成</div>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+        登登必須完成以下<strong>所有面向</strong>的挑戰，才能解鎖電玩時間：
+      </p>
+
+      <!-- 關卡 1：作業與課業常規 -->
+      <div class="gate-card" id="gateCard_1" onclick="toggleGate(1)">
+        <span class="gate-badge b-school">關卡 1・課業常規</span>
+        <div class="gate-info">
+          <div class="gate-name" id="gateTitle_1">完成所有學校作業與聯絡簿</div>
+          <div class="gate-sub" id="gateDesc_1">作業齊全寫完、聯絡簿簽名並收好書包</div>
+        </div>
+        <div class="gate-check" id="gateCheck_1"></div>
+      </div>
+
+      <!-- 關卡 2：精巧小肌肉 -->
+      <div class="gate-card" id="gateCard_2" onclick="toggleGate(2)">
+        <span class="gate-badge b-fine">關卡 2・小肌肉</span>
+        <div class="gate-info">
+          <div class="gate-name" id="gateTitle_2">筷子夾豆趣味計時挑戰</div>
+          <div class="gate-sub" id="gateDesc_2">限時 1 分鐘用筷子夾起 15 顆紅豆/花生</div>
+        </div>
+        <div class="gate-check" id="gateCheck_2"></div>
+      </div>
+
+      <!-- 關卡 3：大肌肉與體能重工作 -->
+      <div class="gate-card" id="gateCard_3" onclick="toggleGate(3)">
+        <span class="gate-badge b-heavy">關卡 3・大動作</span>
+        <div class="gate-info">
+          <div class="gate-name" id="gateTitle_3">節奏跳繩 50 下 或 平板支撐 30 秒</div>
+          <div class="gate-sub" id="gateDesc_3">釋放衝動能量，提升身體關節本體覺穩定</div>
+        </div>
+        <div class="gate-check" id="gateCheck_3"></div>
+      </div>
+
+      <!-- 關卡 4 (爸爸可自由啟用) -->
+      <div class="gate-card" id="gateCard_4" style="display: none;" onclick="toggleGate(4)">
+        <span class="gate-badge b-extra">關卡 4・特別指定</span>
+        <div class="gate-info">
+          <div class="gate-name" id="gateTitle_4">自主閱讀 15 分鐘並分享心得</div>
+          <div class="gate-sub" id="gateDesc_4">讀完向爸爸分享 1 個最酷的內容</div>
+        </div>
+        <div class="gate-check" id="gateCheck_4"></div>
+      </div>
+
+      <div style="text-align: right; margin-top: 10px;">
+        <button class="btn-toggle-edit" onclick="openConfigureGatesModal()">⚙️ 爸爸自選今日 3 大關卡項目</button>
+      </div>
+    </div>
+
+    <div class="arrow-divider">⬇️ 全部完成後才能解鎖</div>
+
+    <!-- 然後解鎖卡 (THEN) -->
+    <div class="then-card" id="thenRewardCard">
+      <div class="then-status-badge status-locked" id="thenStatusBadge">🔒 尚差 3 關未完成</div>
+      <div class="then-desc" id="thenRewardTitle">🎮 解鎖電玩時光 20 分鐘</div>
+      <p class="then-hint" id="thenRewardHint">登登加油！必須完成上方所有關卡才能開啟電玩喔！</p>
+      <button class="btn-main" id="btnLaunchTimer" style="display: none; width: 100%;" onclick="jumpToTimerTab()">⏱️ 立即啟動電玩計時器！</button>
+    </div>
+  </div>
+
+  <!-- 頁面 3：視覺倒數計時器 (Visual Timer) -->
+  <div id="tab-timer" class="tab-content">
+    <div class="timer-container">
+      <h2 style="font-size: 1.25rem; margin-bottom: 4px;">🎮 電玩時光視覺時鐘</h2>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">顏色隨時間遞減，剩 5 分鐘轉為提醒黃色</p>
+
+      <div class="timer-disc-wrap">
+        <svg class="timer-svg" viewBox="0 0 200 200">
+          <circle class="timer-bg" cx="100" cy="100" r="80"></circle>
+          <circle id="timerProgressCircle" class="timer-progress" cx="100" cy="100" r="80" stroke-dasharray="502.65" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="timer-center-text">
+          <div class="timer-digits" id="timerDisplay">20:00</div>
+          <div class="timer-state-label" id="timerStateText">準備中</div>
+        </div>
+      </div>
+
+      <div class="timer-presets">
+        <button class="preset-btn" onclick="setTimerDuration(15, this)">15 分</button>
+        <button class="preset-btn active" onclick="setTimerDuration(20, this)">20 分</button>
+        <button class="preset-btn" onclick="setTimerDuration(30, this)">30 分</button>
+        <button class="preset-btn" onclick="setTimerDuration(45, this)">45 分</button>
+      </div>
+
+      <div class="timer-actions">
+        <button class="btn-main" id="timerStartBtn" onclick="toggleTimer()">開始計時</button>
+        <button class="btn-reset" onclick="resetTimer()">重新設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 頁面 4：📊 成長紀錄庫 (History Database) -->
+  <div id="tab-history" class="tab-content">
+    <div class="action-toolbar" style="margin-bottom: 10px;">
+      <span style="font-size: 0.88rem; font-weight: 800; color: var(--text);">📅 歷程紀錄與觀察日誌</span>
+      <button class="btn-toggle-edit" onclick="copyWeeklyReportToAI()">📋 複製紀錄給 AI 分析</button>
+    </div>
+
+    <!-- 歷史日誌列表 -->
+    <div id="historyList"></div>
+  </div>
+
+  <!-- 頁面 5：家長指引與備份 (Guide & Settings) -->
+  <div id="tab-guide" class="tab-content">
+    <div class="guide-box" style="border-left: 6px solid var(--danger);">
+      <h3>💡 為什麼 iPhone/iPad 下載後打不開？（必看解法）</h3>
+      <p>在 iOS 系統上，直接從「檔案」App 或 Google Drive 預覽點開時，iOS 會啟動<strong>「快速查看（Quick Look）」</strong>，而快速查看會<strong>強制關閉所有網頁互動程式碼</strong>！</p>
+      <p style="margin-top: 8px; font-weight: bold; color: var(--primary);">
+        ✅ 最佳 1 秒線上開啟方式：
+      </p>
+      <p style="font-size: 0.85rem; margin-top: 4px;">
+        1. 使用電腦或 iPad 打開免費空間：<strong>https://tiiny.host</strong><br>
+        2. 將 <code>deng_daily_routine_app.html</code> 拖曳上去，輸入名稱「deng-daily」。<br>
+        3. 點擊「Publish」即可獲得專屬網址（例如 <code>https://deng-daily.tiiny.site</code>）！<br>
+        4. 用 iPhone/iPad 的 Safari 打開該網址，點「分享 ➔ 加入主畫面」，永久秒開使用！
+      </p>
+    </div>
+
+    <div class="guide-box">
+      <h3>💾 資料備份與還原</h3>
+      <p style="margin-bottom: 10px;">隨時匯出備份檔案存入 Google 雲端硬碟：</p>
+      <div style="display: flex; gap: 8px;">
+        <button class="preset-btn" onclick="exportDataJSON()">📤 匯出資料備份</button>
+        <button class="preset-btn" onclick="importDataJSON()">📥 匯入備份資料</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部固定導航欄 -->
+  <nav>
+    <a href="#tab-tasks" class="nav-btn active" id="navBtn_tasks" onclick="switchTab('tab-tasks', this); return false;">
+      <span class="icon">📋</span>
+      <span>今日任務</span>
+    </a>
+    <a href="#tab-firstthen" class="nav-btn" id="navBtn_firstthen" onclick="switchTab('tab-firstthen', this); return false;">
+      <span class="icon">🔄</span>
+      <span>先做然後</span>
+    </a>
+    <a href="#tab-timer" class="nav-btn" id="navBtn_timer" onclick="switchTab('tab-timer', this); return false;">
+      <span class="icon">⏱️</span>
+      <span>電玩時鐘</span>
+    </a>
+    <a href="#tab-history" class="nav-btn" id="navBtn_history" onclick="switchTab('tab-history', this); return false;">
+      <span class="icon">📊</span>
+      <span>紀錄庫</span>
+    </a>
+    <a href="#tab-guide" class="nav-btn" id="navBtn_guide" onclick="switchTab('tab-guide', this); return false;">
+      <span class="icon">⚙️</span>
+      <span>開啟指引</span>
+    </a>
+  </nav>
+
+  <!-- 彈窗：爸爸指定今日關卡 Modal -->
+  <div id="gateConfigModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="font-size: 1.15rem; margin-bottom: 12px;">⚙️ 爸爸挑選今日通關項目</h3>
+      
+      <div class="form-group">
+        <label>關卡 1【課業常規】：</label>
+        <select id="cfgGateSelect_1" class="form-select"></select>
+      </div>
+
+      <div class="form-group">
+        <label>關卡 2【手部小肌肉】：</label>
+        <select id="cfgGateSelect_2" class="form-select"></select>
+      </div>
+
+      <div class="form-group">
+        <label>關卡 3【大動作體能】：</label>
+        <select id="cfgGateSelect_3" class="form-select"></select>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="cfgGateEnable_4" onchange="toggleGate4Input(this.checked)">
+          啟用 關卡 4【特別指定】：
+        </label>
+        <select id="cfgGateSelect_4" class="form-select" disabled></select>
+      </div>
+
+      <div class="form-group">
+        <label>解鎖後的電玩獎勵：</label>
+        <select id="cfgRewardSelect" class="form-select">
+          <option value="🎮 解鎖電玩時光 20 分鐘 (需使用視覺計時器)">🎮 玩電動 20 分鐘 (視覺計時存檔)</option>
+          <option value="🎮 解鎖電玩時光 30 分鐘 (需使用視覺計時器)">🎮 玩電動 30 分鐘 (視覺計時存檔)</option>
+          <option value="🧱 自由拼樂高機械組 25 分鐘">🧱 自由拼樂高 25 分鐘</option>
+          <option value="🚲 戶外騎腳踏車 30 分鐘">🚲 戶外騎腳踏車 30 分鐘</option>
+        </select>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-reset" onclick="closeGateConfigModal()">取消</button>
+        <button class="btn-main" onclick="saveGateConfig()">儲存今日關卡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/編輯任務 Modal -->
+  <div id="taskModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="font-size: 1.15rem; margin-bottom: 14px;" id="modalTitle">新增任務項目</h3>
+      <div class="form-group">
+        <label>任務名稱：</label>
+        <input type="text" id="inputTaskTitle" class="form-input" placeholder="例如：雙手核心平板支撐">
+      </div>
+      <div class="form-group">
+        <label>任務分類：</label>
+        <select id="inputTaskCategory" class="form-select">
+          <option value="school">📖 課業與常規</option>
+          <option value="finemotor">🤲 精巧小肌肉訓練</option>
+          <option value="heavywork">⚡ 體能重工作 (本體覺)</option>
+          <option value="calm">🌬️ 神經調節放鬆</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>目標次數／時間：</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="number" id="inputTaskTargetCount" class="form-input" placeholder="數值 (如 30)" style="width: 50%;">
+          <input type="text" id="inputTaskUnit" class="form-input" placeholder="單位 (如 秒、下、頁)" style="width: 50%;">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>圖示 (Emoji)：</label>
+        <input type="text" id="inputTaskIcon" class="form-input" value="🎯">
+      </div>
+      <div class="form-group">
+        <label>詳細說明：</label>
+        <input type="text" id="inputTaskDesc" class="form-input" placeholder="任務具體步驟指引">
+      </div>
+      <div class="modal-btns">
+        <button class="btn-reset" onclick="closeTaskModal()">取消</button>
+        <button class="btn-main" onclick="saveTaskModal()">儲存任務</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 降落緩衝彈出卡片 -->
+  <div id="landingModal" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <div style="font-size: 3.5rem; margin-bottom: 8px;">🛸</div>
+      <h2 style="font-size: 1.35rem; color: var(--text); margin-bottom: 6px;">電玩時光順利存檔！</h2>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 16px;">
+        登登今天非常帥氣！成功在時間內存檔。<br>現在我們一起來完成「平靜降落三步驟」：
+      </p>
+      <div style="text-align: left; background: var(--bg); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; font-size: 0.88rem; color: var(--text);">
+        <p style="margin-bottom: 6px;">💧 <strong>1.</strong> 大口喝一杯溫開水（補充水份並活化副交感）</p>
+        <p style="margin-bottom: 6px;">🌬️ <strong>2.</strong> 4-7-8 深度呼吸吐氣 3 次</p>
+        <p>🫂 <strong>3.</strong> 跟爸爸大擊掌，或緊抱大靠枕 10 秒</p>
+      </div>
+      <button class="btn-main" style="width: 100%;" onclick="closeLandingModal(true)">完成降落，心情穩定平靜！</button>
+    </div>
+  </div>
+
+  <!-- 浮動提示 -->
+  <div id="cheerToast" class="cheer-toast">⭐ 太棒了！加 1 顆星！</div>
+
+  <script>
+    // --- 安全儲存 (容錯保護) ---
+    function safeGet(key, def) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : def;
+      } catch (e) { return def; }
+    }
+    function safeSet(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+    }
+
+    // --- 音效惰性載入 ---
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+      return audioCtx;
+    }
+    function playTone(freq, dur, type = "sine") {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+      } catch(e) {}
+    }
+    function playSuccessChime() {
+      playTone(523.25, 0.12);
+      setTimeout(() => playTone(659.25, 0.12), 100);
+      setTimeout(() => playTone(783.99, 0.3), 200);
+    }
+    function playUnlockFanfare() {
+      playTone(440, 0.1);
+      setTimeout(() => playTone(554.37, 0.1), 100);
+      setTimeout(() => playTone(659.25, 0.1), 200);
+      setTimeout(() => playTone(880, 0.45), 300);
+    }
+
+    // --- 擴充豐富的四年級專屬任務資料庫 (包含次數、秒數與調配項目) ---
+    const richDefaultTasks = [
+      // 1. 課業與常規 (4 項)
+      { id: "task_contact", category: "school", tag: "📖 學校常規", tagClass: "tag-school", icon: "🎒", title: "完成所有學校作業與聯絡簿", desc: "作業寫完、訂正完成、書包收齊並請爸爸簽名。", count: 1, unit: "次", step: 1 },
+      { id: "task_reading", category: "school", tag: "📖 深度閱讀", tagClass: "tag-school", icon: "📚", title: "每日專注閱讀科普/故事書", desc: "自主閱讀並向爸爸分享 1 個最酷的內容亮點。", count: 20, unit: "分鐘", step: 5 },
+      { id: "task_math_drill", category: "school", tag: "📖 數學運算", tagClass: "tag-school", icon: "📐", title: "數學運算或習作複習挑戰", desc: "專注完成指派頁數，檢查錯誤並訂正。", count: 2, unit: "大題", step: 1 },
+      { id: "task_desk_clean", category: "school", tag: "📖 自主整理", tagClass: "tag-school", icon: "🗄️", title: "書桌與文具分類歸位整理", desc: "清理橡皮擦屑，將筆、課本放回專屬抽屜定位。", count: 1, unit: "次", step: 1 },
+
+      // 2. 手部小肌肉精細動作 (7 項)
+      { id: "task_chopsticks", category: "finemotor", tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor", icon: "🥢", title: "筷子夾豆趣味計時挑戰", desc: "限時用筷子夾取紅豆、花生或小積木放入碗中（鍛鍊前三指握筆肌群）。", count: 15, unit: "顆", step: 5 },
+      { id: "task_origami", category: "finemotor", tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor", icon: "✈️", title: "特技紙飛機或動物立體摺紙", desc: "對齊邊角、用力按壓折痕，練習指尖精準對稱施力。", count: 2, unit: "隻", step: 1 },
+      { id: "task_lego_mechanic", category: "finemotor", tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor", icon: "🧱", title: "精密樂高機械或齒輪積木組裝", desc: "看圖解完成卡榫組裝，鍛鍊手指微小抓握與空間感知。", count: 15, unit: "分鐘", step: 5 },
+      { id: "task_grip_ball", category: "finemotor", tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor", icon: "✊", title: "握力球左右手全力按捏", desc: "雙手各按捏握力球，解決長時間握筆寫字手痠問題。", count: 20, unit: "下", step: 5 },
+      { id: "task_knots_shoes", category: "finemotor", tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor", icon: "🪢", title: "打雙活結與練習綁運動鞋鞋帶", desc: "鍛鍊雙手配合協調與日常生活自主能力。", count: 3, unit: "次", step: 1 },
+      { id: "task_cutting_paper", category: "finemotor", tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor", icon: "✂️", title: "精密沿線剪紙幾何圖形", desc: "拿安全剪刀沿著黑線精準剪下複雜幾何圖案。", count: 2, unit: "張", step: 1 },
+      { id: "task_caps_screws", category: "finemotor", tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor", icon: "🥫", title: "連續開關不同大小密封瓶蓋", desc: "雙手配合旋轉打開並蓋緊不同尺寸寶特瓶或保鮮盒。", count: 6, unit: "個", step: 2 },
+
+      // 3. 體能大動作與重工作 (7 項)
+      { id: "task_jump_rope", category: "heavywork", tag: "⚡ 體能重工作", tagClass: "tag-heavywork", icon: "⚡", title: "節奏跳繩挑戰（或開合跳）", desc: "連續跳躍釋放多餘衝動能量，深層關節落地輸入本體神經受壓。", count: 60, unit: "下", step: 10 },
+      { id: "task_plank", category: "heavywork", tag: "⚡ 體能重工作", tagClass: "tag-heavywork", icon: "🧘", title: "核心平板支撐挑戰 (Plank)", desc: "手肘撐地、身體維持水平直線，激發核心與肩膀深層抗阻。", count: 30, unit: "秒", step: 5 },
+      { id: "task_wall_push", category: "heavywork", tag: "⚡ 體能重工作", tagClass: "tag-heavywork", icon: "🧱", title: "推牆伏地挺身對抗阻力", desc: "雙手貼牆用力推動身體，深層關節受壓迅速平息浮躁。", count: 15, unit: "下", step: 5 },
+      { id: "task_squat_jumps", category: "heavywork", tag: "⚡ 體能重工作", tagClass: "tag-heavywork", icon: "🐸", title: "深蹲爆發力青蛙跳", desc: "蹲下摸地再向上跳起，大量調動下肢大肌肉群。", count: 12, unit: "下", step: 3 },
+      { id: "task_bear_crawl", category: "heavywork", tag: "⚡ 體能重工作", tagClass: "tag-heavywork", icon: "🐻", title: "大黑熊膝蓋懸空爬行", desc: "四肢著地、膝蓋離地爬行，鍛鍊軀幹與肩帶關節穩定。", count: 15, unit: "步", step: 5 },
+      { id: "task_vacuum_chores", category: "heavywork", tag: "⚡ 體能重工作", tagClass: "tag-heavywork", icon: "🧹", title: "生活重工作：推吸塵器或搬書箱", desc: "幫忙操作吸塵器吸客廳地板，透過生活勞動沉澱情緒。", count: 10, unit: "分鐘", step: 5 },
+      { id: "task_wall_ball", category: "heavywork", tag: "⚡ 體能重工作", tagClass: "tag-heavywork", icon: "🏀", title: "雙手對牆拋接球訓練", desc: "雙手有力向牆面拋球並迅速接住，訓練手眼反饋與本體動態協調。", count: 30, unit: "下", step: 10 },
+
+      // 4. 神經調節與舒緩放鬆 (3 項)
+      { id: "task_deep_breath", category: "calm", tag: "🌬️ 神經調節", tagClass: "tag-calm", icon: "🌬️", title: "4-7-8 深度呼吸吐氣放鬆", desc: "吸氣4秒、屏息7秒、緩慢吐氣8秒，刺激迷走神經放鬆。", count: 3, unit: "次", step: 1 },
+      { id: "task_muscle_relax", category: "calm", tag: "🌬️ 神經調節", tagClass: "tag-calm", icon: "✊", title: "雙拳用力緊握5秒後完全放開", desc: "感受肌肉由極度緊繃到徹底放鬆的對比，重複放鬆神經。", count: 3, unit: "次", step: 1 },
+      { id: "task_cold_drink", category: "calm", tag: "🌬️ 神經調節", tagClass: "tag-calm", icon: "🥤", title: "用較細吸管大力吸飲涼開水", desc: "口腔深層吸吮動作迅速抑制交感神經亢奮。", count: 1, unit: "大杯", step: 1 }
+    ];
+
+    let tasks = safeGet('deng_tasks_list_v5', richDefaultTasks);
+    let todayState = safeGet('deng_today_state_v5', {});
+    let starCount = parseInt(safeGet('deng_star_count_v5', '0'), 10) || 0;
+    let historyDB = safeGet('deng_history_db_v5', []);
+    let isEditMode = false;
+    let editingTaskId = null;
+    let currentFilter = 'all';
+
+    // 爸爸關卡預設綁定
+    let gateSettings = safeGet('deng_gate_settings_v5', {
+      gate1: { taskId: "task_contact", title: "完成所有學校作業與聯絡簿", sub: "作業齊全寫完、簽名並收書包" },
+      gate2: { taskId: "task_chopsticks", title: "筷子夾豆趣味計時挑戰", sub: "限時用筷子夾取 15 顆紅豆/花生" },
+      gate3: { taskId: "task_jump_rope", title: "節奏跳繩挑戰 60 下", sub: "連續跳躍釋放多餘衝動能量" },
+      gate4: { enabled: false, taskId: "task_reading", title: "每日專注閱讀 20 分鐘", sub: "讀完向爸爸分享 1 個亮點" },
+      reward: "🎮 解鎖電玩時光 20 分鐘 (需使用視覺計時器)"
+    });
+
+    let gatePassedState = safeGet('deng_gate_passed_v5', { 1: false, 2: false, 3: false, 4: false });
+
+    // --- 分頁切換 ---
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      window.scrollTo(0, 0);
+
+      if (tabId === 'tab-firstthen') renderGates();
+      if (tabId === 'tab-history') renderHistory();
+    }
+
+    // --- 任務清單渲染 (含 [-][+] 次數即時調整) ---
+    function renderTasks() {
+      const container = document.getElementById('taskList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      let completedCount = 0;
+
+      tasks.forEach((t, index) => {
+        const isDone = !!todayState[t.id];
+        if (isDone) completedCount++;
+
+        const isVisible = (currentFilter === 'all' || t.category === currentFilter);
+
+        const card = document.createElement('div');
+        card.className = `task-card cat-${t.category} ${isDone ? 'completed' : ''} ${isEditMode ? 'edit-mode' : ''}`;
+        card.style.display = isVisible ? 'flex' : 'none';
+        card.id = `card_${t.id}`;
+
+        card.innerHTML = `
+          <div class="task-icon" onclick="handleCardClick('${t.id}')">${t.icon}</div>
+          <div class="task-content" onclick="handleCardClick('${t.id}')">
+            <span class="task-tag ${t.tagClass || 'tag-' + t.category}">${t.tag}</span>
+            <div class="task-title">${t.title}</div>
+            <div class="task-desc">${t.desc}</div>
+            <div class="count-adjuster" onclick="event.stopPropagation();">
+              <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">目標：</span>
+              <button class="count-btn" onclick="adjustTaskCount('${t.id}', -${t.step || 1})">-</button>
+              <span class="count-val" id="count_${t.id}">${t.count} ${t.unit}</span>
+              <button class="count-btn" onclick="adjustTaskCount('${t.id}', ${t.step || 1})">+</button>
+            </div>
+          </div>
+          <div class="task-check" onclick="toggleTaskDone('${t.id}')">${isDone ? '✓' : ''}</div>
+          <div class="order-btns">
+            <button onclick="moveTask(${index}, -1)">▲</button>
+            <button onclick="moveTask(${index}, 1)">▼</button>
+            <button onclick="openEditTaskModal('${t.id}')">✏️</button>
+            <button onclick="deleteTask('${t.id}')" style="color: red;">✕</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('progressBadge').textContent = `${completedCount}/${tasks.length} 完成`;
+      document.getElementById('starCount').textContent = starCount;
+    }
+
+    // 次數快速調整
+    function adjustTaskCount(taskId, delta) {
+      const t = tasks.find(item => item.id === taskId);
+      if (!t) return;
+      t.count = Math.max(1, (t.count || 1) + delta);
+      safeSet('deng_tasks_list_v5', tasks);
+
+      const el = document.getElementById(`count_${taskId}`);
+      if (el) el.textContent = `${t.count} ${t.unit}`;
+      showToast(`已將 ${t.title} 調整為 ${t.count} ${t.unit}`);
+      renderGates();
+    }
+
+    function handleCardClick(id) {
+      if (isEditMode) {
+        openEditTaskModal(id);
+      } else {
+        toggleTaskDone(id);
+      }
+    }
+
+    function toggleTaskDone(id) {
+      const isDone = !todayState[id];
+      todayState[id] = isDone;
+
+      if (isDone) {
+        starCount += 1;
+        playSuccessChime();
+        showToast("太棒了！完成挑戰 +1 顆星 ⭐");
+      } else {
+        if (starCount > 0) starCount -= 1;
+      }
+
+      safeSet('deng_today_state_v5', todayState);
+      safeSet('deng_star_count_v5', starCount.toString());
+      renderTasks();
+    }
+
+    function filterTasks(cat, btn) {
+      currentFilter = cat;
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderTasks();
+    }
+
+    // --- 爸爸關卡看板 (First-Then) ---
+    function renderGates() {
+      // 根據綁定的 taskId 動態抓取最新標題與次數
+      const t1 = tasks.find(t => t.id === gateSettings.gate1.taskId) || { title: gateSettings.gate1.title, count: "", unit: "" };
+      const t2 = tasks.find(t => t.id === gateSettings.gate2.taskId) || { title: gateSettings.gate2.title, count: "", unit: "" };
+      const t3 = tasks.find(t => t.id === gateSettings.gate3.taskId) || { title: gateSettings.gate3.title, count: "", unit: "" };
+
+      document.getElementById('gateTitle_1').textContent = `${t1.title} (${t1.count} ${t1.unit})`;
+      document.getElementById('gateTitle_2').textContent = `${t2.title} (${t2.count} ${t2.unit})`;
+      document.getElementById('gateTitle_3').textContent = `${t3.title} (${t3.count} ${t3.unit})`;
+
+      const card4 = document.getElementById('gateCard_4');
+      if (gateSettings.gate4 && gateSettings.gate4.enabled) {
+        const t4 = tasks.find(t => t.id === gateSettings.gate4.taskId) || { title: "特別任務", count: "", unit: "" };
+        card4.style.display = 'flex';
+        document.getElementById('gateTitle_4').textContent = `${t4.title} (${t4.count} ${t4.unit})`;
+      } else {
+        card4.style.display = 'none';
+      }
+
+      document.getElementById('thenRewardTitle').textContent = gateSettings.reward;
+
+      let totalGates = 3 + (gateSettings.gate4 && gateSettings.gate4.enabled ? 1 : 0);
+      let passedCount = 0;
+
+      for (let i = 1; i <= 4; i++) {
+        if (i === 4 && (!gateSettings.gate4 || !gateSettings.gate4.enabled)) continue;
+        const card = document.getElementById(`gateCard_${i}`);
+        const check = document.getElementById(`gateCheck_${i}`);
+        if (card && check) {
+          if (gatePassedState[i]) {
+            card.classList.add('passed');
+            check.textContent = '✓';
+            passedCount++;
+          } else {
+            card.classList.remove('passed');
+            check.textContent = '';
+          }
+        }
+      }
+
+      document.getElementById('gateProgressText').textContent = `${passedCount}/${totalGates} 通關完成`;
+
+      const rewardCard = document.getElementById('thenRewardCard');
+      const badge = document.getElementById('thenStatusBadge');
+      const hint = document.getElementById('thenRewardHint');
+      const launchBtn = document.getElementById('btnLaunchTimer');
+
+      if (passedCount === totalGates && totalGates > 0) {
+        rewardCard.classList.add('unlocked');
+        badge.className = 'then-status-badge status-unlocked';
+        badge.textContent = '🎉 全數通關！電玩已解鎖';
+        hint.textContent = '太棒了！爸爸指定的 3 大挑戰都完成了，現在可以盡情享受電玩！';
+        launchBtn.style.display = 'block';
+      } else {
+        rewardCard.classList.remove('unlocked');
+        badge.className = 'then-status-badge status-locked';
+        badge.textContent = `🔒 尚差 ${totalGates - passedCount} 關未完成`;
+        hint.textContent = `登登加油！必須完成全部 ${totalGates} 項挑戰才能開啟電玩喔！`;
+        launchBtn.style.display = 'none';
+      }
+    }
+
+    function toggleGate(num) {
+      gatePassedState[num] = !gatePassedState[num];
+      safeSet('deng_gate_passed_v5', gatePassedState);
+
+      let totalGates = 3 + (gateSettings.gate4 && gateSettings.gate4.enabled ? 1 : 0);
+      let passedCount = [1, 2, 3, 4].filter(i => {
+        if (i === 4 && (!gateSettings.gate4 || !gateSettings.gate4.enabled)) return false;
+        return !!gatePassedState[i];
+      }).length;
+
+      if (gatePassedState[num]) {
+        playSuccessChime();
+        starCount += 1;
+        safeSet('deng_star_count_v5', starCount.toString());
+        document.getElementById('starCount').textContent = starCount;
+
+        if (passedCount === totalGates) {
+          playUnlockFanfare();
+          showToast("🏆 太厲害了！所有關卡全數通關！電玩已解鎖！");
+        } else {
+          showToast(`完成第 ${num} 關！+1 顆星 ⭐`);
+        }
+      } else {
+        if (starCount > 0) starCount -= 1;
+        safeSet('deng_star_count_v5', starCount.toString());
+        document.getElementById('starCount').textContent = starCount;
+      }
+
+      renderGates();
+    }
+
+    function jumpToTimerTab() {
+      const timerBtn = document.getElementById('navBtn_timer');
+      switchTab('tab-timer', timerBtn);
+    }
+
+    // 爸爸在下拉選單自由挑選今日 3 大面向的指定任務
+    function openConfigureGatesModal() {
+      populateGateSelect('cfgGateSelect_1', 'school', gateSettings.gate1.taskId);
+      populateGateSelect('cfgGateSelect_2', 'finemotor', gateSettings.gate2.taskId);
+      populateGateSelect('cfgGateSelect_3', 'heavywork', gateSettings.gate3.taskId);
+      populateGateSelect('cfgGateSelect_4', 'all', gateSettings.gate4.taskId);
+
+      const en4 = !!(gateSettings.gate4 && gateSettings.gate4.enabled);
+      document.getElementById('cfgGateEnable_4').checked = en4;
+      document.getElementById('cfgGateSelect_4').disabled = !en4;
+
+      document.getElementById('cfgRewardSelect').value = gateSettings.reward;
+      document.getElementById('gateConfigModal').classList.add('show');
+    }
+
+    function populateGateSelect(selectId, category, selectedId) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = '';
+      const list = category === 'all' ? tasks : tasks.filter(t => t.category === category);
+
+      list.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = `${t.icon} ${t.title} (${t.count} ${t.unit})`;
+        if (t.id === selectedId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function closeGateConfigModal() {
+      document.getElementById('gateConfigModal').classList.remove('show');
+    }
+
+    function toggleGate4Input(checked) {
+      document.getElementById('cfgGateSelect_4').disabled = !checked;
+    }
+
+    function saveGateConfig() {
+      const id1 = document.getElementById('cfgGateSelect_1').value;
+      const id2 = document.getElementById('cfgGateSelect_2').value;
+      const id3 = document.getElementById('cfgGateSelect_3').value;
+      const id4 = document.getElementById('cfgGateSelect_4').value;
+      const en4 = document.getElementById('cfgGateEnable_4').checked;
+
+      gateSettings.gate1.taskId = id1;
+      gateSettings.gate2.taskId = id2;
+      gateSettings.gate3.taskId = id3;
+      gateSettings.gate4 = { enabled: en4, taskId: id4 };
+      gateSettings.reward = document.getElementById('cfgRewardSelect').value;
+
+      safeSet('deng_gate_settings_v5', gateSettings);
+      closeGateConfigModal();
+      renderGates();
+      showToast("已更新爸爸指定的今日 3 大通關項目！");
+    }
+
+    // --- 家長排列與任務管理 ---
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      const btn = document.getElementById('btnToggleEdit');
+      if (isEditMode) {
+        btn.classList.add('active');
+        btn.textContent = '✅ 完成排列';
+        showToast("已進入家長排序與編輯模式");
+      } else {
+        btn.classList.remove('active');
+        btn.textContent = '⚙️ 家長排列/編輯';
+      }
+      renderTasks();
+    }
+
+    function moveTask(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= tasks.length) return;
+      const temp = tasks[index];
+      tasks[index] = tasks[newIndex];
+      tasks[newIndex] = temp;
+      safeSet('deng_tasks_list_v5', tasks);
+      renderTasks();
+    }
+
+    function deleteTask(id) {
+      if (confirm('確定要刪除這項任務嗎？')) {
+        tasks = tasks.filter(t => t.id !== id);
+        delete todayState[id];
+        safeSet('deng_tasks_list_v5', tasks);
+        safeSet('deng_today_state_v5', todayState);
+        renderTasks();
+      }
+    }
+
+    function openAddTaskModal() {
+      editingTaskId = null;
+      document.getElementById('modalTitle').textContent = '➕ 新增挑戰任務';
+      document.getElementById('inputTaskTitle').value = '';
+      document.getElementById('inputTaskCategory').value = 'heavywork';
+      document.getElementById('inputTaskTargetCount').value = '15';
+      document.getElementById('inputTaskUnit').value = '下';
+      document.getElementById('inputTaskIcon').value = '🎯';
+      document.getElementById('inputTaskDesc').value = '';
+      document.getElementById('taskModal').classList.add('show');
+    }
+
+    function openEditTaskModal(id) {
+      const t = tasks.find(item => item.id === id);
+      if (!t) return;
+      editingTaskId = id;
+      document.getElementById('modalTitle').textContent = '✏️ 編輯任務內容';
+      document.getElementById('inputTaskTitle').value = t.title;
+      document.getElementById('inputTaskCategory').value = t.category;
+      document.getElementById('inputTaskTargetCount').value = t.count || 1;
+      document.getElementById('inputTaskUnit').value = t.unit || '次';
+      document.getElementById('inputTaskIcon').value = t.icon;
+      document.getElementById('inputTaskDesc').value = t.desc;
+      document.getElementById('taskModal').classList.add('show');
+    }
+
+    function closeTaskModal() {
+      document.getElementById('taskModal').classList.remove('show');
+    }
+
+    function saveTaskModal() {
+      const title = document.getElementById('inputTaskTitle').value.trim();
+      const category = document.getElementById('inputTaskCategory').value;
+      const count = parseInt(document.getElementById('inputTaskTargetCount').value, 10) || 1;
+      const unit = document.getElementById('inputTaskUnit').value.trim() || '次';
+      const icon = document.getElementById('inputTaskIcon').value.trim() || '🎯';
+      const desc = document.getElementById('inputTaskDesc').value.trim();
+
+      if (!title) { alert('請輸入任務名稱'); return; }
+
+      const catTagMap = {
+        school: { tag: "📖 學校常規", tagClass: "tag-school" },
+        finemotor: { tag: "🤲 精巧小肌肉", tagClass: "tag-finemotor" },
+        heavywork: { tag: "⚡ 體能重工作", tagClass: "tag-heavywork" },
+        calm: { tag: "🌬️ 神經調節", tagClass: "tag-calm" }
+      };
+
+      if (editingTaskId) {
+        const idx = tasks.findIndex(t => t.id === editingTaskId);
+        if (idx !== -1) {
+          tasks[idx].title = title;
+          tasks[idx].category = category;
+          tasks[idx].count = count;
+          tasks[idx].unit = unit;
+          tasks[idx].icon = icon;
+          tasks[idx].desc = desc;
+          tasks[idx].tag = catTagMap[category].tag;
+          tasks[idx].tagClass = catTagMap[category].tagClass;
+        }
+      } else {
+        const newId = 'custom_' + Date.now();
+        tasks.push({
+          id: newId, title, category, count, unit, step: 1,
+          icon, desc, tag: catTagMap[category].tag, tagClass: catTagMap[category].tagClass
+        });
+      }
+
+      safeSet('deng_tasks_list_v5', tasks);
+      closeTaskModal();
+      renderTasks();
+      showToast('任務已成功儲存！');
+    }
+
+    // --- 歷史紀錄庫 ---
+    function archiveTodayProgress() {
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const completedTasks = tasks.filter(t => todayState[t.id]);
+      const rate = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
+
+      const record = {
+        date: dateStr,
+        timestamp: Date.now(),
+        totalTasks: tasks.length,
+        completedCount: completedTasks.length,
+        rate: rate,
+        starsEarned: starCount,
+        completedTitles: completedTasks.map(t => `${t.title} (${t.count}${t.unit})`),
+        note: ""
+      };
+
+      const existingIdx = historyDB.findIndex(h => h.date === dateStr);
+      if (existingIdx !== -1) {
+        record.note = historyDB[existingIdx].note;
+        historyDB[existingIdx] = record;
+      } else {
+        historyDB.unshift(record);
+      }
+
+      safeSet('deng_history_db_v5', historyDB);
+      renderHistory();
+      showToast(`今日紀錄已儲存！完成率 ${rate}% ⭐`);
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyList');
+      if (!container) return;
+      if (historyDB.length === 0) {
+        container.innerHTML = `
+          <div class="history-card" style="text-align: center; color: var(--text-muted); padding: 25px 15px;">
+            <p>目前尚無歷史紀錄。</p>
+            <p style="font-size: 0.8rem; margin-top: 6px;">點擊任務頁面的「💾 結算並儲存今日紀錄」，即可在此建立登登的每日成長日誌！</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      historyDB.forEach((h, idx) => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.innerHTML = `
+          <div class="history-header">
+            <span class="history-date">📅 ${h.date}</span>
+            <span class="history-stat">${h.completedCount}/${h.totalTasks} 項 (${h.rate}%)</span>
+          </div>
+          <div class="history-bar">
+            <div class="history-bar-fill" style="width: ${h.rate}%;"></div>
+          </div>
+          <div class="history-task-pills">
+            ${(h.completedTitles || []).map(title => `<span class="h-pill done">✓ ${title}</span>`).join('')}
+          </div>
+          <div style="margin-top: 8px;">
+            <input type="text" class="history-note-input" placeholder="✏️ 家長備忘心得（如：跳繩進步到 60 下、關機穩定）" 
+                   value="${h.note || ''}" onchange="updateHistoryNote(${idx}, this.value)">
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function updateHistoryNote(index, text) {
+      if (historyDB[index]) {
+        historyDB[index].note = text;
+        safeSet('deng_history_db_v5', historyDB);
+        showToast("已更新心得備忘！");
+      }
+    }
+
+    function resetTodayTasks() {
+      if (confirm('要把今天的打勾與通關狀態重新歸零嗎？')) {
+        todayState = {};
+        starCount = 0;
+        gatePassedState = { 1: false, 2: false, 3: false, 4: false };
+        safeSet('deng_today_state_v5', todayState);
+        safeSet('deng_star_count_v5', '0');
+        safeSet('deng_gate_passed_v5', gatePassedState);
+        renderTasks();
+        renderGates();
+        showToast("今日打勾已重置！");
+      }
+    }
+
+    function copyWeeklyReportToAI() {
+      if (historyDB.length === 0) {
+        alert('目前還沒有歷史紀錄可供複製，請先完成並儲存幾天的紀錄！');
+        return;
+      }
+      let report = `【登登的近期日常任務與表現日誌】\n學生年級：國小四年級\n紀錄天數：${historyDB.length} 天\n\n`;
+      historyDB.slice(0, 7).forEach(h => {
+        report += `📅 日期：${h.date}\n• 完成率：${h.rate}% (${h.completedCount}/${h.totalTasks} 項完成，獲 ${h.starsEarned} 顆星)\n• 完成項目：${(h.completedTitles || []).join('、')}\n`;
+        if (h.note) report += `• 家長筆記：${h.note}\n`;
+        report += `------------------\n`;
+      });
+      report += `\n【家長提問】：請根據上述登登近期的執行紀錄，分析他目前適應狀況，並建議是否需要進一步調高難度或微調哪些項目？`;
+
+      try {
+        navigator.clipboard.writeText(report).then(() => showToast("📋 紀錄已複製到剪貼簿！可直接貼給 AI"))
+          .catch(() => prompt("請長按複製以下紀錄文字：", report));
+      } catch (e) { prompt("請長按複製以下紀錄文字：", report); }
+    }
+
+    // --- 視覺倒數計時器 ---
+    let timerTotalSeconds = 20 * 60;
+    let timerRemainingSeconds = 20 * 60;
+    let timerInterval = null;
+    let isTimerRunning = false;
+    let warningPlayed = false;
+    const circleRadius = 80;
+    const circumference = 2 * Math.PI * circleRadius;
+
+    function setTimerDuration(mins, btn) {
+      if (isTimerRunning) return;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      timerTotalSeconds = mins * 60;
+      timerRemainingSeconds = timerTotalSeconds;
+      warningPlayed = false;
+      updateTimerUI();
+    }
+
+    function toggleTimer() {
+      if (isTimerRunning) pauseTimer(); else startTimer();
+    }
+
+    function startTimer() {
+      if (timerRemainingSeconds <= 0) timerRemainingSeconds = timerTotalSeconds;
+      isTimerRunning = true;
+      document.getElementById('timerStartBtn').textContent = '暫停';
+      document.getElementById('timerStartBtn').style.background = '#F59E0B';
+      document.getElementById('timerStateText').textContent = '電玩進行中';
+      playTone(440, 0.15);
+
+      timerInterval = setInterval(() => {
+        timerRemainingSeconds--;
+        updateTimerUI();
+
+        if (timerRemainingSeconds === 300 && !warningPlayed) {
+          warningPlayed = true;
+          playTone(440, 0.25, "triangle");
+          showToast("🔔 倒數 5 分鐘！可以準備存檔囉");
+        }
+
+        if (timerRemainingSeconds <= 0) {
+          clearInterval(timerInterval);
+          isTimerRunning = false;
+          playTone(523.25, 0.5);
+          document.getElementById('timerStartBtn').textContent = '開始計時';
+          document.getElementById('timerStartBtn').style.background = 'var(--primary)';
+          document.getElementById('timerStateText').textContent = '時間到了！';
+          document.getElementById('landingModal').classList.add('show');
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      document.getElementById('timerStartBtn').textContent = '繼續';
+      document.getElementById('timerStartBtn').style.background = 'var(--primary)';
+      document.getElementById('timerStateText').textContent = '已暫停';
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      timerRemainingSeconds = timerTotalSeconds;
+      warningPlayed = false;
+      document.getElementById('timerStartBtn').textContent = '開始計時';
+      document.getElementById('timerStateText').textContent = '準備中';
+      updateTimerUI();
+    }
+
+    function updateTimerUI() {
+      const mins = Math.floor(timerRemainingSeconds / 60);
+      const secs = timerRemainingSeconds % 60;
+      document.getElementById('timerDisplay').textContent = 
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      const progress = timerRemainingSeconds / timerTotalSeconds;
+      const offset = circumference * (1 - progress);
+      const circle = document.getElementById('timerProgressCircle');
+      if (circle) circle.style.strokeDashoffset = offset;
+
+      if (timerRemainingSeconds <= 300) {
+        if (circle) circle.style.stroke = 'var(--warning)';
+      } else {
+        if (circle) circle.style.stroke = 'var(--primary)';
+      }
+    }
+
+    function closeLandingModal(completed) {
+      document.getElementById('landingModal').classList.remove('show');
+      resetTimer();
+      if (completed) {
+        starCount += 2;
+        safeSet('deng_star_count_v5', starCount.toString());
+        document.getElementById('starCount').textContent = starCount;
+        showToast("太棒了！順利降落，額外獎勵 2 顆星 ⭐⭐");
+      }
+    }
+
+    // --- 備份與還原 ---
+    function exportDataJSON() {
+      const data = { tasks, todayState, starCount, historyDB, gateSettings, gatePassedState, version: "5.0" };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `登登日常備份_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    function importDataJSON() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            if (data.tasks) tasks = data.tasks;
+            if (data.todayState) todayState = data.todayState;
+            if (data.starCount !== undefined) starCount = data.starCount;
+            if (data.historyDB) historyDB = data.historyDB;
+            if (data.gateSettings) gateSettings = data.gateSettings;
+            if (data.gatePassedState) gatePassedState = data.gatePassedState;
+
+            safeSet('deng_tasks_list_v5', tasks);
+            safeSet('deng_today_state_v5', todayState);
+            safeSet('deng_star_count_v5', starCount.toString());
+            safeSet('deng_history_db_v5', historyDB);
+            safeSet('deng_gate_settings_v5', gateSettings);
+            safeSet('deng_gate_passed_v5', gatePassedState);
+
+            renderTasks();
+            renderGates();
+            renderHistory();
+            alert('資料還原成功！');
+          } catch (err) { alert('檔案格式錯誤，無法還原'); }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('cheerToast');
+      if (!toast) return;
+      toast.textContent = text;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 1600);
+    }
+
+    function init() {
+      try {
+        const now = new Date();
+        const days = ['日', '一', '二', '三', '四', '五', '六'];
+        const dText = document.getElementById('currentDateText');
+        if (dText) dText.textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 星期${days[now.getDay()]}`;
+        renderTasks();
+        renderGates();
+        updateTimerUI();
+      } catch(e) {}
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
